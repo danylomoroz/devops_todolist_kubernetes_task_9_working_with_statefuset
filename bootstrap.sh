@@ -1,32 +1,33 @@
 #!/bin/bash
+set -euo pipefail  # Зупинити скрипт при помилці, неіснуючій змінній або помилці в конвеєрі
 
-# 1. Create the Kubernetes cluster using kind
+# 1. Ініціалізація кластера
 kind create cluster --config cluster.yml
 
-# 2. Create Namespaces first
+# 2. Namespaces
 kubectl apply -f .infrastructure/namespace.yml
 kubectl apply -f .infrastructure/namespace-mysql.yml
 
-# 3. Apply ConfigMaps and Secrets
+# 3. Сховище та конфігурації
+kubectl apply -f .infrastructure/pv.yml
+kubectl apply -f .infrastructure/pvc.yml
 kubectl apply -f .infrastructure/configMap.yml
 kubectl apply -f .infrastructure/configMap-mysql.yml
 kubectl apply -f .infrastructure/secret.yml
 kubectl apply -f .infrastructure/mysql-secret.yml
 kubectl apply -f .infrastructure/db-conn-secret.yml
 
-# 4. Setup Storage (PV and PVC)
-kubectl apply -f .infrastructure/pv.yml
-kubectl apply -f .infrastructure/pvc.yml
-
-# 5. Deploy MySQL Database (Service and StatefulSet)
+# 4. MySQL (Service МАЄ бути перед StatefulSet)
 kubectl apply -f .infrastructure/mysql-service.yml
 kubectl apply -f .infrastructure/statefulSet.yml
 
-# 6. Deploy the TodoApp and its Services
+echo "⏳ Waiting for MySQL replicas to be ready..."
+kubectl wait --for=condition=ready pod -l app=mysql -n mysql --timeout=120s
+
+# 5. Додаток
 kubectl apply -f .infrastructure/deployment.yml
 kubectl apply -f .infrastructure/clusterIp.yml
 kubectl apply -f .infrastructure/nodeport.yml
 kubectl apply -f .infrastructure/hpa.yml
 
-echo "✅ All resources have been applied to the cluster."
-echo "⏳ Please wait a few minutes for all pods to reach the 'Running' state."
+echo "✅ Deployment finished successfully!"
