@@ -18,7 +18,7 @@ kubectl apply -f .infrastructure/mysql-secret.yml
 kubectl apply -f .infrastructure/db-conn-secret.yml
 
 # 4. MySQL (Service МАЄ бути перед StatefulSet)
-kubectl apply -f .infrastructure/mysql-service.yml
+kubectl apply -f .infrastructure/mysql-headless.yml
 kubectl apply -f .infrastructure/statefulSet.yml
 
 echo "⏳ Waiting for MySQL replicas to be ready..."
